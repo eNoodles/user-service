@@ -1,0 +1,25 @@
+{
+  "name": "user-service",
+  "version": "1.0.0",
+  "description": "",
+  "homepage": "https://github.com/eNoodles/user-service#readme",
+  "bugs": {
+    "url": "https://github.com/eNoodles/user-service/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/eNoodles/user-service.git"
+  },
+  "license": "ISC",
+  "author": "eNoodles",
+  "type": "module",
+  "main": "user-service.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "base64url": "^3.0.1",
+    "express": "^4.21.2",
+    "uuid4": "^2.0.3"
+  }
+}
