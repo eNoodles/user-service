@@ -1,31 +1,67 @@
 const port = 3100;
 
 import express from 'express';
+import base64url from 'base64url';
+import uuid4 from 'uuid4';
 
 const app = express();
 app.use(express.json());
 
+// STORAGE
 /**
+ * usersById: Map<string, {id, username, password, avatar}>
+ * userId is deterministic (base64url(username)) at creation time and NEVER changes
+ */
+const usersById = new Map();
+/** username -> userId (changes if username is updated) */
+const userIdByUsername = new Map();
+
+/** sessionId -> { sessionId, userId } */
+const sessionsById = new Map();
+/** userId -> sessionId (used to enforce one active session per user) */
+const activeSessionIdByUserId = new Map();
+
+
+// HELPERS
+const hasOwn = (obj, key) => Object.prototype.hasOwnProperty.call(obj ?? {}, key);
+
+const isNonEmptyString = (v) => typeof v === 'string' && v.trim().length > 0;
+
+const requireFields = (obj, fields) => fields.every((f) => hasOwn(obj, f) && isNonEmptyString(obj[f]));
+
+/**
+ * Returns the session ID from the request
+ */
+const getSessionIdFromRequest = (req) => {
+  if (req.body && typeof req.body.session === 'string') return req.body.session;
+
+  return null;
+};
+
+/**
+ * Authentication middleware
  * 
  * @param {*} req 
  * @param {*} res 
  * @param {*} next 
+ * @returns 
  */
 const isAuthenticated = (req, res, next) => {
-  if (req.session) {
-    // session is valid
-    next();
-  } 
-  else {
-    // non-authenticated
-    res.status(401).send("UNAUTHORIZED");
-  }
+  const sessionId = getSessionIdFromRequest(req);
+  if (!sessionId) return res.status(401).send('UNAUTHORIZED');
+
+  const session = sessionsById.get(sessionId);
+  if (!session) return res.status(401).send('UNAUTHORIZED');
+
+  // enforce only one active session per user
+  const active = activeSessionIdByUserId.get(session.userId);
+  if (active !== sessionId) return res.status(401).send('UNAUTHORIZED');
+
+  req.session = session;
+  next();
 };
 
-// Example of protecting a route
-app.get('/profile', isAuthenticated, (req, res) => {
-  res.send(`Welcome user ${req.session.userId}`);
-});
+// ROUTES
 
 /**
  * Create User
