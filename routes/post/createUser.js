@@ -1,5 +1,5 @@
-import base64url from 'base64url';
-import { usersById, userIdByUsername, requireFields } from '../../state.js';
+import { requireFields } from '../../state.js';
+import { users } from '../../mongo.js';
 
 export const path = '/api/v1/users/';
 
@@ -12,22 +12,25 @@ export const path = '/api/v1/users/';
  * @param {*} res 
  * @returns 
  */
-export function handler(req, res) {
+export async function handler(req, res) {
   if (!requireFields(req.body, ['username', 'password', 'avatar'])) {
     return res.status(400).send('BAD REQUEST');
   }
 
   const { username, password, avatar } = req.body;
+  
+  try {
+    const result = await users.insertOne({ username, password, avatar });
+    const id = result.insertedId.toString();
+    const user = { id, username, password, avatar };
 
-  if (userIdByUsername.has(username)) {
-    return res.status(409).send('CONFLICT');
+    return res.status(200).json(user);
+  } 
+  catch (err) {
+    if (err.code === 11000) // duplicate key error code
+      return res.status(409).send('CONFLICT');
+
+    console.error('Failed to create user:', err);
+    return res.status(500).send('INTERNAL SERVER ERROR');
   }
-
-  const id = base64url.encode(username); // deterministic
-  const user = { id, username, password, avatar };
-
-  usersById.set(id, user);
-  userIdByUsername.set(username, id);
-
-  return res.status(200).json(user);
 }

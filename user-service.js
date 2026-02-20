@@ -2,6 +2,9 @@ const port = 3100;
 
 import express from 'express';
 import { loadRoutes } from './loadRoutes.js';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const app = express();
 app.use(express.json());

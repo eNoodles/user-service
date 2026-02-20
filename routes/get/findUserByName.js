@@ -1,5 +1,6 @@
 import { isAuthenticated } from '../../auth.js';
-import { usersById, userIdByUsername, isNonEmptyString, publicUserView } from '../../state.js';
+import { isNonEmptyString, publicUserView } from '../../state.js';
+import { users } from '../../mongo.js';
 
 export const path = '/api/v1/users/';
 export const middleware = [isAuthenticated];
@@ -14,18 +15,28 @@ export const middleware = [isAuthenticated];
  * @param {*} res 
  * @returns 
  */
-export function handler(req, res) {
+export async function handler(req, res) {
   const username = req.query?.username;
 
   if (!isNonEmptyString(username)) return res.status(400).send('BAD REQUEST');
 
-  const id = userIdByUsername.get(username);
-  if (!id) return res.status(404).send('NOT FOUND');
+  try {
+    const doc = await users.findOne({ username });
+    if (!doc) return res.status(404).send('NOT FOUND');
 
-  const user = usersById.get(id);
-  if (!user) return res.status(404).send('NOT FOUND');
+    const user = {
+      id: doc._id.toString(),
+      username: doc.username,
+      password: doc.password,
+      avatar: doc.avatar
+    };
 
-  return res.status(200).json(
-    publicUserView(user, req.session.userId)
-  );
+    return res.status(200).json(
+      publicUserView(user, req.session.userId)
+    );
+  } 
+  catch (err) {
+    console.error('Failed to find user by name:', err);
+    return res.status(500).send('INTERNAL SERVER ERROR');
+  }
 }
