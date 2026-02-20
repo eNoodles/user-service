@@ -40,13 +40,10 @@ export async function handler(req, res) {
   const { username, password, avatar } = req.body;
 
   try {
-    const result = await users.findOneAndUpdate(
-      { _id: oid },
-      { $set: { username, password, avatar } },
-      { returnDocument: 'after' }
-    );
-
-    const doc = result.value;
+    const query = { _id: oid };
+    const setCommand = { $set: { username, password, avatar } };
+    const options = { upsert: false, returnDocument: 'after' };
+    const doc = await users.findOneAndUpdate(query, setCommand, options);
 
     if (!doc) return res.status(403).send('FORBIDDEN');
 
@@ -58,7 +55,8 @@ export async function handler(req, res) {
     };
 
     return res.status(200).json(user);
-  } catch (err) {
+  } 
+  catch (err) {
     if (err.code === 11000) // duplicate key error code
       return res.status(409).send('CONFLICT');
 

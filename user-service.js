@@ -1,3 +1,4 @@
+"use strict";
 const port = 3100;
 
 import express from 'express';

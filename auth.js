@@ -1,4 +1,4 @@
-import { sessionsById, activeSessionIdByUserId } from './state.js';
+import { redisClient } from './redis.js';
 
 const getSessionIdFromRequest = (req) => {
   if (req.body && typeof req.body.session === 'string') return req.body.session;
@@ -17,17 +17,24 @@ const getSessionIdFromRequest = (req) => {
  * @param {*} next 
  * @returns 
  */
-export const isAuthenticated = (req, res, next) => {
+export const isAuthenticated = async (req, res, next) => {
   const sessionId = getSessionIdFromRequest(req);
   if (!sessionId) return res.status(401).send('UNAUTHORIZED');
 
-  const session = sessionsById.get(sessionId);
-  if (!session) return res.status(401).send('UNAUTHORIZED');
+  try {
+    // sessions:<sessionId> -> userId
+    const userId = await redisClient.get(`sessions:${sessionId}`);
+    if (!userId) return res.status(401).send('UNAUTHORIZED');
 
-  // enforce only one active session per user
-  const active = activeSessionIdByUserId.get(session.userId);
-  if (active !== sessionId) return res.status(401).send('UNAUTHORIZED');
+    // userSessions:<userId> -> active sessionId
+    const activeSessionId = await redisClient.get(`userSessions:${userId}`);
+    if (activeSessionId !== sessionId) return res.status(401).send('UNAUTHORIZED');
 
-  req.session = session;
-  next();
+    req.session = { sessionId, userId };
+    next();
+  } 
+  catch (err) {
+    console.error('Authorization error:', err);
+    return res.status(500).send('INTERNAL SERVER ERROR');
+  }
 };
