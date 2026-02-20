@@ -1,5 +1,5 @@
 import uuid4 from 'uuid4';
-import { requireFields } from '../../state.js';
+import { requireFields } from '../../util.js';
 import { users } from '../../mongo.js';
 import { redisClient, SESSION_EXPIRES_SEC } from '../../redis.js';
 

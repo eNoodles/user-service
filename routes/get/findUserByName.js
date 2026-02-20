@@ -1,5 +1,5 @@
 import { isAuthenticated } from '../../auth.js';
-import { isNonEmptyString, publicUserView } from '../../state.js';
+import { isNonEmptyString, publicUserView } from '../../util.js';
 import { users } from '../../mongo.js';
 
 export const path = '/api/v1/users/';

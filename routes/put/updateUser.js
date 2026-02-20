@@ -1,5 +1,5 @@
 import { isAuthenticated } from '../../auth.js';
-import { requireFields } from '../../state.js';
+import { requireFields } from '../../util.js';
 import { users } from '../../mongo.js';
 import { ObjectId } from 'mongodb';
 

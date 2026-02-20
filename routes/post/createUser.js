@@ -1,4 +1,4 @@
-import { requireFields } from '../../state.js';
+import { requireFields } from '../../util.js';
 import { users } from '../../mongo.js';
 
 export const path = '/api/v1/users/';

@@ -1,5 +1,5 @@
 import { isAuthenticated } from '../../auth.js';
-import { publicUserView } from '../../state.js';
+import { publicUserView } from '../../util.js';
 import { users } from '../../mongo.js';
 import { ObjectId } from 'mongodb';
 
