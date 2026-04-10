@@ -1,7 +1,7 @@
 import uuid4 from 'uuid4';
 import { requireFields } from '../../util.js';
 import { users } from '../../mongo.js';
-import { redisClient, SESSION_EXPIRES_SEC } from '../../redis.js';
+import { redisClient, SESSION_EXPIRES_SEC, REDIS_PREFIX } from '../../redis.js';
 
 export const path = '/api/v1/login';
 
@@ -34,16 +34,16 @@ export async function handler(req, res) {
   const userId = doc._id.toString();
 
   // invalidate old session for this user (only one active session per user)
-  const oldSessionId = await redisClient.get(`userSessions:${userId}`);
-  if (oldSessionId) await redisClient.del(`sessions:${oldSessionId}`);
+  const oldSessionId = await redisClient.get(`${REDIS_PREFIX}:userSessions:${userId}`);
+  if (oldSessionId) await redisClient.del(`${REDIS_PREFIX}:sessions:${oldSessionId}`);
 
   const sessionId = uuid4(); // generate new session id
 
-  await redisClient.set(`sessions:${sessionId}`, userId);
-  await redisClient.set(`userSessions:${userId}`, sessionId);
+  await redisClient.set(`${REDIS_PREFIX}:sessions:${sessionId}`, userId);
+  await redisClient.set(`${REDIS_PREFIX}:userSessions:${userId}`, sessionId);
 
-  await redisClient.expire(`sessions:${sessionId}`, SESSION_EXPIRES_SEC);
-  await redisClient.expire(`userSessions:${userId}`, SESSION_EXPIRES_SEC);
+  await redisClient.expire(`${REDIS_PREFIX}:sessions:${sessionId}`, SESSION_EXPIRES_SEC);
+  await redisClient.expire(`${REDIS_PREFIX}:userSessions:${userId}`, SESSION_EXPIRES_SEC);
 
   return res.status(200).json({ 
     session: sessionId 

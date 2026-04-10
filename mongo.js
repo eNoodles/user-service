@@ -1,6 +1,15 @@
 import { MongoClient } from 'mongodb';
 
-const mongoClient = new MongoClient(`mongodb://${process.env.MONGO_USER}:${process.env.MONGO_PASS}@127.0.0.1:27017/${process.env.MONGO_DB}?authSource=admin`);
+const mongoAddress = process.env.MONGO_HOST; 
+const mongoPort = process.env.MONGO_PORT; 
+const mongoUser = process.env.MONGO_USER; 
+const mongoPassword = process.env.MONGO_PASS; 
+const dbName = process.env.MONGO_DB; 
+
+const connectionString = 
+`mongodb://${mongoUser}:${mongoPassword}@${mongoAddress}:${mongoPort}/${dbName}?authSource=admin`;
+
+const mongoClient = new MongoClient(connectionString);
 
 try {
   await mongoClient.connect();

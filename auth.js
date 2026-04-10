@@ -1,7 +1,8 @@
-import { redisClient } from './redis.js';
+import { redisClient, REDIS_PREFIX } from './redis.js';
 
 const getSessionIdFromRequest = (req) => {
   if (req.body && typeof req.body.session === 'string') return req.body.session;
+  if (req.query && typeof req.query.session === 'string') return req.query.session;
   return null;
 };
 
@@ -23,11 +24,11 @@ export const isAuthenticated = async (req, res, next) => {
 
   try {
     // sessions:<sessionId> -> userId
-    const userId = await redisClient.get(`sessions:${sessionId}`);
+    const userId = await redisClient.get(`${REDIS_PREFIX}:sessions:${sessionId}`);
     if (!userId) return res.status(401).send('UNAUTHORIZED');
 
     // userSessions:<userId> -> active sessionId
-    const activeSessionId = await redisClient.get(`userSessions:${userId}`);
+    const activeSessionId = await redisClient.get(`${REDIS_PREFIX}:userSessions:${userId}`);
     if (activeSessionId !== sessionId) return res.status(401).send('UNAUTHORIZED');
 
     req.session = { sessionId, userId };

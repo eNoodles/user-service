@@ -1,5 +1,5 @@
 "use strict";
-const port = 3100;
+const port = Number.parseInt(process.env.GAME_PORT, 10) || 3100;
 
 import express from 'express';
 import { loadRoutes } from './loadRoutes.js';
