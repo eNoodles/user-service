@@ -1,0 +1,32 @@
+services:
+  user-service:
+    image: e-drik:latest
+    ports:
+      - "3100:3100"
+    env_file: "docker-compose.env"
+    depends_on:
+      - redis
+      - mongo
+  
+  redis:
+    image: redis:latest
+    command: ["redis-server", "--requirepass", "${REDIS_PASS}"]
+    env_file: "docker-compose.env"
+    ports:
+      - "6379:6379"
+    restart: always
+  
+  mongo:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_USER}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASS}
+      - MONGO_INITDB_DATABASE=admin
+    volumes:
+      - mongo-data:/data/db     
+    restart: always
+
+volumes:
+  mongo-data:
